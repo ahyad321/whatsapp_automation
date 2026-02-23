@@ -58,36 +58,31 @@ app.post("/webhook", async (req, res) => {
       return;
     }
 
+    const firstProductId = order.line_items[0].product_id;
+    const imageUrl = await getProductImage(firstProductId);
+
     const productList = order.line_items
       .map((item, i) => `${i + 1}. ${item.title}`)
       .join("\n");
 
-    // ===== SEND TEXT MESSAGE (Botbiz format) =====
     const response = await axios.post(BOTBIZ_URL, {
-  apiToken: BOTBIZ_TOKEN,
-  phone_number_id: PHONE_NUMBER_ID,
-  phone_number: phone,
-  type: "template",
-  template_name: "order_confirmation_full",
-  language: "en_US", // match your locale exactly
-  header: {
-    type: "image",
-    image: {
-      link: imageUrl
-    }
-  },
-  body_params: [
-    order.customer?.first_name || "Customer",
-    order.name,
-    productList
-  ]
-});
-  ]
-});
-
-${productList}
-
-Total: ₹${order.total_price}`
+      apiToken: BOTBIZ_TOKEN,
+      phone_number_id: PHONE_NUMBER_ID,
+      phone_number: phone,
+      type: "template",
+      template_name: "order_confirmation_full",
+      language: "en_US",
+      header: {
+        type: "image",
+        image: {
+          link: imageUrl
+        }
+      },
+      body_params: [
+        order.customer?.first_name || "Customer",
+        order.name,
+        productList
+      ]
     });
 
     console.log("Botbiz response:", response.data);
@@ -97,7 +92,6 @@ Total: ₹${order.total_price}`
   }
 });
 
-app.listen(3000, () => console.log("Server running"));
-
-
-
+app.listen(3000, () => {
+  console.log("Server running on port 3000");
+});
