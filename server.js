@@ -68,11 +68,20 @@ app.post("/webhook", async (req, res) => {
   phone_number_id: PHONE_NUMBER_ID,
   phone_number: phone,
   type: "template",
-  template_name: "order_notification",
-  language: "en",
+  template_name: "order_confirmation_full",
+  language: "en_US", // match your locale exactly
+  header: {
+    type: "image",
+    image: {
+      link: imageUrl
+    }
+  },
   body_params: [
     order.customer?.first_name || "Customer",
-    order.name
+    order.name,
+    productList
+  ]
+});
   ]
 });
 
@@ -89,4 +98,5 @@ Total: ₹${order.total_price}`
 });
 
 app.listen(3000, () => console.log("Server running"));
+
 
