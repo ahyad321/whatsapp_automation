@@ -4,9 +4,13 @@ const axios = require("axios");
 const app = express();
 app.use(express.json());
 
-const SHOPIFY_STORE = "gs-smart-watch-store.myshopify.com"; // <-- change this
+// ===== CONFIG =====
+const SHOPIFY_STORE = "gs-smart-watch-store.myshopify.com"; // <-- CHANGE THIS
 const SHOPIFY_TOKEN = process.env.SHOPIFY_TOKEN;
+const BOTBIZ_TOKEN = process.env.BOTBIZ_TOKEN;
+const BOTBIZ_URL = "https://api.botbiz.io/send-message";
 
+// ===== FETCH PRODUCT IMAGE SAFELY =====
 async function getProductImage(productId) {
   try {
     const response = await axios.get(
@@ -30,31 +34,88 @@ async function getProductImage(productId) {
 
     return null;
   } catch (error) {
-    console.error("Error fetching product:", error.response?.data || error.message);
+    console.error(
+      "Error fetching product:",
+      error.response?.data || error.message
+    );
     return null;
   }
 }
 
+// ===== WEBHOOK =====
 app.post("/webhook", async (req, res) => {
-  res.status(200).send("OK"); // respond immediately to Shopify
+  // Respond immediately to Shopify (prevents timeout)
+  res.status(200).send("OK");
 
   try {
     const order = req.body;
 
-    const firstProductId = order.line_items[0].product_id;
+    const phone =
+      order.phone ||
+      order.customer?.phone ||
+      order.billing_address?.phone;
 
+    if (!phone) {
+      console.log("No phone found in order");
+      return;
+    }
+
+    const firstProductId = order.line_items[0].product_id;
     const imageUrl = await getProductImage(firstProductId);
 
-    console.log("Fetched Image URL:", imageUrl);
-  } catch (err) {
-    console.error(err.message);
+    const productList = order.line_items
+      .map((item, i) => `${i + 1}. ${item.title}`)
+      .join("\n");
+
+    // ===== SEND IMAGE =====
+    if (imageUrl) {
+      await axios.post(
+        BOTBIZ_URL,
+        {
+          to: phone,
+          type: "image",
+          image: {
+            link: imageUrl,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${BOTBIZ_TOKEN}`,
+          },
+        }
+      );
+    }
+
+    // ===== SEND TEXT CONFIRMATION =====
+    await axios.post(
+      BOTBIZ_URL,
+      {
+        to: phone,
+        type: "text",
+        text: {
+          body: `✅ Order Confirmed ${order.name}
+
+${productList}
+
+Total: ₹${order.total_price}
+
+We’ll notify you when it ships.`,
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${BOTBIZ_TOKEN}`,
+        },
+      }
+    );
+
+    console.log("WhatsApp message sent successfully");
+  } catch (error) {
+    console.error(
+      "Botbiz error:",
+      error.response?.data || error.message
+    );
   }
 });
 
-app.listen(3000, () => console.log("Server running"));
-
-
-
-
-
-
+app.listen(3000, () => console.log("Server running on port 3000"));
