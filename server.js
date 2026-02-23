@@ -63,7 +63,7 @@ app.post("/webhook", async (req, res) => {
 
     const templatePayload = {
       name: "order_confirmation_full",
-      language: "en_US",
+      language: "en",
       components: [
         {
           type: "header",
@@ -104,3 +104,4 @@ app.post("/webhook", async (req, res) => {
 app.listen(3000, () => {
   console.log("Server running on port 3000");
 });
+
