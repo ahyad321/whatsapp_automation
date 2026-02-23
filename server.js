@@ -8,7 +8,7 @@ app.use(express.json());
 const SHOPIFY_STORE = "gs-smart-watch-store.myshopify.com"; // <-- CHANGE THIS
 const SHOPIFY_TOKEN = process.env.SHOPIFY_TOKEN;
 const BOTBIZ_TOKEN = process.env.BOTBIZ_TOKEN;
-const BOTBIZ_URL = "https://api.botbiz.io/send-message";
+const BOTBIZ_URL = "https://dash.botbiz.io/api/v1/whatsapp/send";
 
 // ===== FETCH PRODUCT IMAGE SAFELY =====
 async function getProductImage(productId) {
@@ -119,3 +119,4 @@ We’ll notify you when it ships.`,
 });
 
 app.listen(3000, () => console.log("Server running on port 3000"));
+
