@@ -5,12 +5,14 @@ const app = express();
 app.use(express.json());
 
 // ===== CONFIG =====
-const SHOPIFY_STORE = "gs-smart-watch-store.myshopify.com"; // <-- CHANGE THIS
+const SHOPIFY_STORE = "gs-smart-watch-store.myshopify.com"; // change this
 const SHOPIFY_TOKEN = process.env.SHOPIFY_TOKEN;
+
 const BOTBIZ_TOKEN = process.env.BOTBIZ_TOKEN;
 const BOTBIZ_URL = "https://dash.botbiz.io/api/v1/whatsapp/send";
+const PHONE_NUMBER_ID = "1006116575918464"; // change this
 
-// ===== FETCH PRODUCT IMAGE SAFELY =====
+// ===== FETCH PRODUCT IMAGE =====
 async function getProductImage(productId) {
   try {
     const response = await axios.get(
@@ -34,17 +36,13 @@ async function getProductImage(productId) {
 
     return null;
   } catch (error) {
-    console.error(
-      "Error fetching product:",
-      error.response?.data || error.message
-    );
+    console.error("Product fetch error:", error.response?.data || error.message);
     return null;
   }
 }
 
 // ===== WEBHOOK =====
 app.post("/webhook", async (req, res) => {
-  // Respond immediately to Shopify (prevents timeout)
   res.status(200).send("OK");
 
   try {
@@ -56,67 +54,31 @@ app.post("/webhook", async (req, res) => {
       order.billing_address?.phone;
 
     if (!phone) {
-      console.log("No phone found in order");
+      console.log("No phone found");
       return;
     }
-
-    const firstProductId = order.line_items[0].product_id;
-    const imageUrl = await getProductImage(firstProductId);
 
     const productList = order.line_items
       .map((item, i) => `${i + 1}. ${item.title}`)
       .join("\n");
 
-    // ===== SEND IMAGE =====
-    if (imageUrl) {
-      await axios.post(
-        BOTBIZ_URL,
-        {
-          to: phone,
-          type: "image",
-          image: {
-            link: imageUrl,
-          },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${BOTBIZ_TOKEN}`,
-          },
-        }
-      );
-    }
-
-    // ===== SEND TEXT CONFIRMATION =====
-    await axios.post(
-      BOTBIZ_URL,
-      {
-        to: phone,
-        type: "text",
-        text: {
-          body: `✅ Order Confirmed ${order.name}
+    // ===== SEND TEXT MESSAGE (Botbiz format) =====
+    const response = await axios.post(BOTBIZ_URL, {
+      apiToken: BOTBIZ_TOKEN,
+      phone_number_id: PHONE_NUMBER_ID,
+      phone_number: phone,
+      message: `✅ Order Confirmed ${order.name}
 
 ${productList}
 
-Total: ₹${order.total_price}
+Total: ₹${order.total_price}`
+    });
 
-We’ll notify you when it ships.`,
-        },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${BOTBIZ_TOKEN}`,
-        },
-      }
-    );
+    console.log("Botbiz response:", response.data);
 
-    console.log("WhatsApp message sent successfully");
   } catch (error) {
-    console.error(
-      "Botbiz error:",
-      error.response?.data || error.message
-    );
+    console.error("Botbiz error:", error.response?.data || error.message);
   }
 });
 
-app.listen(3000, () => console.log("Server running on port 3000"));
-
+app.listen(3000, () => console.log("Server running"));
