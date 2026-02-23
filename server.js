@@ -9,7 +9,7 @@ const SHOPIFY_STORE = "gs-smart-watch-store.myshopify.com"; // CHANGE
 const SHOPIFY_TOKEN = process.env.SHOPIFY_TOKEN;
 
 const BOTBIZ_TOKEN = process.env.BOTBIZ_TOKEN;
-const PHONE_NUMBER_ID = "1909596459630563"; // CHANGE
+const PHONE_NUMBER_ID = "1006116575918464"; // CHANGE
 
 const BOTBIZ_URL = "https://dash.botbiz.io/api/v1/whatsapp/send";
 
