@@ -64,10 +64,17 @@ app.post("/webhook", async (req, res) => {
 
     // ===== SEND TEXT MESSAGE (Botbiz format) =====
     const response = await axios.post(BOTBIZ_URL, {
-      apiToken: BOTBIZ_TOKEN,
-      phone_number_id: PHONE_NUMBER_ID,
-      phone_number: phone,
-      message: `✅ Order Confirmed ${order.name}
+  apiToken: BOTBIZ_TOKEN,
+  phone_number_id: PHONE_NUMBER_ID,
+  phone_number: phone,
+  type: "template",
+  template_name: "order_notification",
+  language: "en",
+  body_params: [
+    order.customer?.first_name || "Customer",
+    order.name
+  ]
+});
 
 ${productList}
 
@@ -82,3 +89,4 @@ Total: ₹${order.total_price}`
 });
 
 app.listen(3000, () => console.log("Server running"));
+
