@@ -4,7 +4,7 @@ const axios = require("axios");
 const app = express();
 app.use(express.json());
 
-const SHOPIFY_STORE = "gs-smart-watch-store.myshopify.com"; // <-- change this
+const SHOPIFY_STORE =gs-smart-watch-store.myshopify.com; // <-- change this
 const SHOPIFY_TOKEN = process.env.SHOPIFY_TOKEN;
 
 async function getProductImage(productId) {
@@ -52,3 +52,4 @@ app.post("/webhook", async (req, res) => {
 });
 
 app.listen(3000, () => console.log("Server running"));
+
